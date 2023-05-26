@@ -25,7 +25,6 @@ class AuthenticationRepository {
     final json = jsonDecode(res.body) as Map<String, dynamic>;
 
     final success = json['success'] as bool;
-    print(success);
 
     if (success == true) {
       final data = json['data'] as Map<String, dynamic>;

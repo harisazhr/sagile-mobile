@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:project_repository/project_repository.dart';
 import 'package:sagile_mobile/login/login.dart';
 import 'package:formz/formz.dart';
+import 'package:sagile_mobile/project/bloc/project_bloc.dart';
 
 class _LoginButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LoginBloc, LoginState>(
+    return BlocConsumer<LoginBloc, LoginState>(
       buildWhen: (previous, current) => previous.status != current.status,
       builder: (context, state) {
         return state.status.isSubmissionInProgress
@@ -20,6 +22,13 @@ class _LoginButton extends StatelessWidget {
                     : null,
                 child: const Text('Login'),
               );
+      },
+      listener: (context, state) {
+        if (state.status == FormzStatus.submissionSuccess) {
+          context
+              .read<ProjectBloc>()
+              .add(ProjectStatusChanged(ProjectStatus.loading));
+        }
       },
     );
   }

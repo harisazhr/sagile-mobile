@@ -9,8 +9,8 @@ class UserRepository {
   User? _user = User.empty;
 
   Future<User?> getUser(String token) async {
-    print('token $token');
-    print('_user $_user');
+    // print('token $token');
+    // print('_user $_user');
     if (_user == User.empty) {
       final res = await requestUser(token: token);
       final json = jsonDecode(res.body) as Map<String, dynamic>;
@@ -30,17 +30,21 @@ class UserRepository {
     //   () => _user = User(const Uuid().v4()),
     // );
   }
-}
 
-Future<http.Response> requestUser({
-  required String token,
-}) {
-  return http.get(
-    Uri.parse(NetworkRepository.userURL),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-      'ngrok-skip-browser-warning': '69420',
-      'Authorization': 'Bearer $token'
-    },
-  );
+  Future<http.Response> requestUser({
+    required String token,
+  }) {
+    return http.get(
+      Uri.parse(NetworkRepository.userURL),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'ngrok-skip-browser-warning': '69420',
+        'Authorization': 'Bearer $token'
+      },
+    );
+  }
+
+  void logOut() {
+    _user = User.empty;
+  }
 }
