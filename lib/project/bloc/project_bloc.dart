@@ -16,6 +16,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
         _authenticationRepository = authenticationRepository,
         super(const ProjectState.uninitialized()) {
     on<ProjectStatusChanged>(_onProjectStatusChanged);
+    on<ProjectUpdateRequested>(_onProjectUpdateRequested);
     _projectStatusSubscription = _projectRepository.status.listen(
       (status) => add(ProjectStatusChanged(status)),
     );
@@ -35,37 +36,69 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     ProjectStatusChanged event,
     Emitter<ProjectState> emit,
   ) async {
+    List<Project>? projects = [];
+    // print(event.status);
     switch (event.status) {
       case ProjectStatus.uninitialized:
-        return emit(const ProjectState.uninitialized());
+        return emit(ProjectState.uninitialized());
 
-      // case ProjectStatus.loading:
-      // return emit(const ProjectState.loaded());
-      // final user = await _tryGetUser(_authenticationRepository.token);
-      // print('user $user');
-      // return emit(
-      //   user != null
-      //       ? ProjectState.authenticated(user)
-      //       : const ProjectState.unauthenticated(),
-      // );
-
-      case ProjectStatus.loaded:
-        final projects = await _tryGetProject(_authenticationRepository.token);
+      case ProjectStatus.loading:
+        projects = await _tryGetProject(_authenticationRepository.token);
+        // print(projects);
         return emit(
           projects != null
-              ? ProjectState.loaded(projects)
+              ? ProjectState.loads(projects)
               : ProjectState.error(),
         );
 
+      case ProjectStatus.updating:
+        projects = state.projects;
+        return emit(ProjectState.updating(projects));
+
       case ProjectStatus.error:
-        return emit(const ProjectState.error());
+        return emit(ProjectState.error());
+
+      default:
+        break;
     }
   }
 
-  Future<List<Project>?> _tryGetProject(token) async {
+  Future<List<Project>?> _tryGetProject(String token) async {
     try {
       final projects = await _projectRepository.getProject(token);
       return projects;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _onProjectUpdateRequested(
+    ProjectUpdateRequested event,
+    Emitter<ProjectState> emit,
+  ) async {
+    print('_onProjectUpdateRequested');
+    Project? updatedProject =
+        await _tryUpdateProject(_authenticationRepository.token, event.project);
+    // Project? project = event.project;
+    print(updatedProject);
+    if (updatedProject != null) {
+      List<Project> projects = state.projects;
+      int updateIndex = projects.indexWhere(
+        (e) => e.id == updatedProject.id,
+      );
+      projects.removeAt(updateIndex);
+      projects.insert(updateIndex, updatedProject);
+      return emit(ProjectState.loads(projects));
+    }
+    return emit(ProjectState.error());
+  }
+
+  Future<Project?> _tryUpdateProject(String token, Project project) async {
+    try {
+      print('_tryUpdateProject');
+      final updatedProject =
+          await _projectRepository.updateProject(token, project);
+      return updatedProject;
     } catch (_) {
       return null;
     }

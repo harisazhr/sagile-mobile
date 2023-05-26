@@ -4,17 +4,20 @@ class Project extends Equatable {
   const Project(
     this.id, {
     this.title = '',
+    this.description = '',
+    this.team = '',
     this.statuses = const [],
-    this.userstories = const [],
+    // this.userstories = const [],
   });
 
-  final String id;
+  final int id;
   final String title;
+  final String description;
+  final String team;
   final List<String> statuses;
-  final List<String> userstories;
 
   @override
-  List<Object> get props => [id, title, statuses, userstories];
+  List<Object> get props => [id, title, description, team, statuses];
 
-  static const empty = Project('-');
+  static const empty = Project(0);
 }

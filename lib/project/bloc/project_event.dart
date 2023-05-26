@@ -10,4 +10,8 @@ class ProjectStatusChanged extends ProjectEvent {
   final ProjectStatus status;
 }
 
-// class AuthenticationLogoutRequested extends AuthenticationEvent {}
+class ProjectUpdateRequested extends ProjectEvent {
+  const ProjectUpdateRequested(this.project);
+
+  final Project project;
+}
