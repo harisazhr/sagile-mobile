@@ -20,6 +20,6 @@ dependencies:
     path: packages/project_repository
   table_calendar: ^3.0.9
   salomon_bottom_bar: ^3.3.2
-
+  intl: ^0.18.1
 flutter:
   uses-material-design: true

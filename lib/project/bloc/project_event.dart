@@ -5,13 +5,16 @@ abstract class ProjectEvent {
 }
 
 class ProjectStatusChanged extends ProjectEvent {
-  const ProjectStatusChanged(this.status);
+  const ProjectStatusChanged(this.status,
+      {this.project = Project.empty, this.userstory = Userstory.empty});
 
   final ProjectStatus status;
-}
-
-class ProjectUpdateRequested extends ProjectEvent {
-  const ProjectUpdateRequested(this.project);
-
   final Project project;
+  final Userstory userstory;
 }
+
+// class ProjectUpdateRequested extends ProjectEvent {
+//   const ProjectUpdateRequested(this.project);
+
+//   final Project project;
+// }

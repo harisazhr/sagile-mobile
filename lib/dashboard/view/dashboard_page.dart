@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sagile_mobile/dashboard/cubit/dashboard_cubit.dart';
-// import 'package:sagile_mobile/home/view/calendar_page.dart';
-// import 'package:sagile_mobile/home/view/home_page.dart';
+import 'package:sagile_mobile/calendar/view/calendar_page.dart';
 import 'package:sagile_mobile/project/view/project_page.dart';
 import 'package:sagile_mobile/home/view/settings_page.dart';
+import 'package:sagile_mobile/userstory/view/userstory_page.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 
 class TabPage {
@@ -21,14 +21,22 @@ class DashboardPage extends StatefulWidget {
   }
 
   final List<TabPage> _tabPages = [
-    // TabPage(
-    //   page: const HomePage(),
-    //   tab: SalomonBottomBarItem(
-    //     icon: const Icon(Icons.home),
-    //     title: const Text("Home"),
-    //     selectedColor: Colors.purple,
-    //   ),
-    // ),
+    TabPage(
+      page: const UserstoryPage(),
+      tab: SalomonBottomBarItem(
+        icon: const Icon(Icons.home),
+        title: const Text("Home"),
+        selectedColor: Colors.purple,
+      ),
+    ),
+    TabPage(
+      page: const CalendarPage(),
+      tab: SalomonBottomBarItem(
+        icon: const Icon(Icons.calendar_month),
+        title: const Text("Calendar"),
+        selectedColor: Colors.orange,
+      ),
+    ),
     TabPage(
       page: const ProjectPage(),
       tab: SalomonBottomBarItem(
@@ -45,14 +53,6 @@ class DashboardPage extends StatefulWidget {
         selectedColor: Colors.teal,
       ),
     ),
-    // {
-    //   'page': const CalendarPage(),
-    //   'tab': SalomonBottomBarItem(
-    //     icon: const Icon(Icons.calendar_month),
-    //     title: const Text("Calendar"),
-    //     selectedColor: Colors.orange,
-    //   ),
-    // }
   ];
 
   @override

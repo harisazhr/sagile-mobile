@@ -7,13 +7,14 @@ class ProjectState extends Equatable {
   });
 
   const ProjectState.uninitialized() : this._();
+  const ProjectState.ready(List<Project> projects)
+      : this._(status: ProjectStatus.ready, projects: projects);
 
-  const ProjectState.loading() : this._(status: ProjectStatus.loading);
-  const ProjectState.loads(List<Project> projects)
-      : this._(projects: projects, status: ProjectStatus.loaded);
+  const ProjectState.loading(projects)
+      : this._(status: ProjectStatus.loading, projects: projects);
 
-  const ProjectState.updating(List<Project> projects)
-      : this._(projects: projects, status: ProjectStatus.updating);
+  const ProjectState.updates(List<Project> projects)
+      : this._(projects: projects, status: ProjectStatus.updatingProject);
 
   const ProjectState.error() : this._(status: ProjectStatus.error);
 

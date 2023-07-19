@@ -16,7 +16,6 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
         _authenticationRepository = authenticationRepository,
         super(const ProjectState.uninitialized()) {
     on<ProjectStatusChanged>(_onProjectStatusChanged);
-    on<ProjectUpdateRequested>(_onProjectUpdateRequested);
     _projectStatusSubscription = _projectRepository.status.listen(
       (status) => add(ProjectStatusChanged(status)),
     );
@@ -37,26 +36,82 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     Emitter<ProjectState> emit,
   ) async {
     List<Project>? projects = [];
-    // print(event.status);
+    print(event.status);
     switch (event.status) {
       case ProjectStatus.uninitialized:
         return emit(ProjectState.uninitialized());
 
       case ProjectStatus.loading:
+        return emit(ProjectState.loading(state.projects));
+
+      case ProjectStatus.retrieving:
         projects = await _tryGetProject(_authenticationRepository.token);
-        // print(projects);
         return emit(
           projects != null
-              ? ProjectState.loads(projects)
+              ? ProjectState.ready(projects)
               : ProjectState.error(),
         );
 
-      case ProjectStatus.updating:
-        projects = state.projects;
-        return emit(ProjectState.updating(projects));
+      case ProjectStatus.updatingProject:
+        final updatedProject = await _tryUpdateProject(
+            _authenticationRepository.token, event.project);
+        if (updatedProject != null) {
+          List<Project> projects = state.projects;
+          int updateIndex = projects.indexWhere(
+            (e) => e.id == updatedProject.id,
+          );
+          projects.removeAt(updateIndex);
+          projects.insert(updateIndex, updatedProject);
+          return emit(ProjectState.ready(projects));
+        }
+        return emit(ProjectState.error());
+
+      case ProjectStatus.updatingUserstory:
+        final updatedUserstory = await _tryUpdateUserstory(
+            _authenticationRepository.token, event.userstory);
+        if (updatedUserstory != null) {
+          List<Project> projects = state.projects;
+          int projectIndex = projects.indexWhere((project) =>
+              project.userstories.firstWhere(
+                  (userstory) => userstory.id == updatedUserstory.id,
+                  orElse: () => Userstory.empty) !=
+              Userstory.empty);
+          int updateIndex = projects[projectIndex]
+              .userstories
+              .indexWhere((userstory) => userstory.id == updatedUserstory.id);
+          projects[projectIndex].userstories.removeAt(updateIndex);
+          projects[projectIndex]
+              .userstories
+              .insert(updateIndex, updatedUserstory);
+          return emit(ProjectState.ready(projects));
+        }
+        return emit(ProjectState.error());
+
+      case ProjectStatus.removingUserstory:
+        final removedUserstory = await _tryRemoveUserstory(
+            _authenticationRepository.token, event.userstory);
+        if (removedUserstory != null) {
+          print('removedUserstory');
+          print(removedUserstory);
+          List<Project> projects = state.projects;
+          int projectIndex = projects.indexWhere((project) =>
+              project.userstories.firstWhere(
+                  (userstory) => userstory.id == removedUserstory.id,
+                  orElse: () => Userstory.empty) !=
+              Userstory.empty);
+          int updateIndex = projects[projectIndex]
+              .userstories
+              .indexWhere((userstory) => userstory.id == removedUserstory.id);
+          projects[projectIndex].userstories.removeAt(updateIndex);
+          return emit(ProjectState.ready(projects));
+        }
+        return emit(ProjectState.error());
 
       case ProjectStatus.error:
         return emit(ProjectState.error());
+
+      case ProjectStatus.ready:
+        return emit(ProjectState.ready(state.projects));
 
       default:
         break;
@@ -72,33 +127,41 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     }
   }
 
-  Future<void> _onProjectUpdateRequested(
-    ProjectUpdateRequested event,
-    Emitter<ProjectState> emit,
-  ) async {
-    print('_onProjectUpdateRequested');
-    Project? updatedProject =
-        await _tryUpdateProject(_authenticationRepository.token, event.project);
-    // Project? project = event.project;
-    print(updatedProject);
-    if (updatedProject != null) {
-      List<Project> projects = state.projects;
-      int updateIndex = projects.indexWhere(
-        (e) => e.id == updatedProject.id,
-      );
-      projects.removeAt(updateIndex);
-      projects.insert(updateIndex, updatedProject);
-      return emit(ProjectState.loads(projects));
-    }
-    return emit(ProjectState.error());
-  }
-
   Future<Project?> _tryUpdateProject(String token, Project project) async {
     try {
       print('_tryUpdateProject');
       final updatedProject =
           await _projectRepository.updateProject(token, project);
       return updatedProject;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Userstory?> _tryUpdateUserstory(
+      String token, Userstory userstory) async {
+    try {
+      print('_tryUpdateProject');
+      final updatedUserstory =
+          await _projectRepository.updateUserstory(token, userstory);
+      return Userstory(
+        updatedUserstory!.id,
+        title: updatedUserstory.title,
+        status: updatedUserstory.status,
+        tasks: userstory.tasks,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Userstory?> _tryRemoveUserstory(
+      String token, Userstory userstory) async {
+    try {
+      print('_tryRemoveUserstory');
+      final removedUserstory =
+          await _projectRepository.removeUserstory(token, userstory);
+      return removedUserstory;
     } catch (_) {
       return null;
     }

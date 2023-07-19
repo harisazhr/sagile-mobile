@@ -32,23 +32,32 @@ class _ProjectPageState extends State<ProjectPage> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Text('Projects'),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Projects'),
+                        IconButton(
+                            onPressed: () {
+                              context.read<ProjectBloc>()
+                                ..add(
+                                    ProjectStatusChanged(ProjectStatus.loading))
+                                ..add(ProjectStatusChanged(
+                                    ProjectStatus.retrieving));
+                            },
+                            icon: Icon(Icons.refresh))
+                      ],
+                    ),
                   ),
                   Divider(),
-                  Expanded(
-                    child: BlocBuilder<ProjectBloc, ProjectState>(
-                      builder: (context, state) {
-                        switch (state.status) {
-                          case ProjectStatus.uninitialized:
-                            return Text('unauth');
-                          case ProjectStatus.updating:
-                          // return Text('updating');
-                          // return CircularProgressIndicator();
-                          case ProjectStatus.loading:
-                            // return Text('retrieving');
-                            return CircularProgressIndicator();
-                          case ProjectStatus.loaded:
-                            return ListView(
+                  BlocBuilder<ProjectBloc, ProjectState>(
+                    buildWhen: (previous, current) => previous != current,
+                    builder: (context, state) {
+                      switch (state.status) {
+                        case ProjectStatus.loading:
+                          return CircularProgressIndicator();
+                        case ProjectStatus.ready:
+                          return Expanded(
+                            child: ListView(
                               shrinkWrap: true,
                               children: [
                                 ...state.projects
@@ -69,7 +78,7 @@ class _ProjectPageState extends State<ProjectPage> {
                                             showDialog(
                                               context: context,
                                               builder: (context) =>
-                                                  ProjectModal(
+                                                  ProjectModalEdit(
                                                 projectId: e.id,
                                               ),
                                             );
@@ -93,12 +102,15 @@ class _ProjectPageState extends State<ProjectPage> {
                                     )
                                     .toList(),
                               ],
-                            );
-                          case ProjectStatus.error:
-                            return Text('error');
-                        }
-                      },
-                    ),
+                            ),
+                          );
+                        case ProjectStatus.error:
+                          return Text('error');
+                        default:
+                          break;
+                      }
+                      return Text('unauth');
+                    },
                   ),
                 ],
               ),

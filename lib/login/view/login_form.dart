@@ -27,7 +27,7 @@ class _LoginButton extends StatelessWidget {
         if (state.status == FormzStatus.submissionSuccess) {
           context
               .read<ProjectBloc>()
-              .add(ProjectStatusChanged(ProjectStatus.loading));
+              .add(ProjectStatusChanged(ProjectStatus.retrieving));
         }
       },
     );
