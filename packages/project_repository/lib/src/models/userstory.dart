@@ -21,4 +21,39 @@ class Userstory extends Equatable {
   List<Object> get props => [id, title, status, tasks];
 
   static const empty = Userstory(-1);
+
+  void reorderTasks() {
+    print('reorderTask');
+    final newTasks = tasks
+        .map(
+          (e) => Task(
+            e.id,
+            order: tasks.indexOf(e) + 1,
+            title: e.title,
+            status: e.status,
+            startDate: e.startDate,
+            endDate: e.endDate,
+          ),
+        )
+        .toList();
+    tasks
+      ..clear()
+      ..addAll(newTasks);
+    print('tasks');
+    print(tasks);
+  }
+
+  Userstory copyWith({
+    int? id,
+    String? title,
+    Status? status,
+    List<Task>? tasks,
+  }) {
+    return Userstory(
+      id ?? this.id,
+      title: title ?? this.title,
+      status: status ?? this.status,
+      tasks: tasks ?? this.tasks,
+    );
+  }
 }

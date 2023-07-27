@@ -26,7 +26,6 @@ class Project extends Equatable {
 
   @override
   List<Object?> get props =>
-      // [id, title, description, startDate, endDate, team, statuses, userstories, sprints];
       [id, title, description, startDate, endDate, team, statuses, userstories];
 
   static const empty = Project(-1);

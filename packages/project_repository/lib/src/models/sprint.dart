@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:project_repository/src/models/models.dart';
 
 class Sprint extends Equatable {
   const Sprint(

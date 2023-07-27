@@ -22,4 +22,22 @@ class Task extends Equatable {
   List<Object?> get props => [id, order, title, status, startDate, endDate];
 
   static const empty = Task(-1);
+
+  Task copyWith({
+    int? id,
+    int? order,
+    String? title,
+    Status? status,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) {
+    return Task(
+      id ?? this.id,
+      order: order ?? this.order,
+      title: title ?? this.title,
+      status: status ?? this.status,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+    );
+  }
 }

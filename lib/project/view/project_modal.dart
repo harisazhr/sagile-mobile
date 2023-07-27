@@ -222,7 +222,7 @@ class _ProjectModalEditState extends State<ProjectModalEdit> {
                                         .parse(_controller['endDate']!.text)) >
                                     0) {
                                   _controller['endDate']!.text =
-                                      DateFormat('dd/MM/yyyy').format(newDate!);
+                                      DateFormat('dd/MM/yyyy').format(newDate);
                                 }
                               },
                               icon: Icon(Icons.calendar_month))
@@ -296,11 +296,10 @@ class ProjectModalStatus extends StatefulWidget {
 }
 
 class _ProjectModalStatusState extends State<ProjectModalStatus> {
-  final _formKey = GlobalKey<FormState>();
+  // final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
-    final _navigator = Navigator.of(context);
     return BlocBuilder<ProjectBloc, ProjectState>(
       builder: (context, state) {
         final _project = state.projects

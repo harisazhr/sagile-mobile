@@ -143,11 +143,11 @@ class ProjectRepository {
         // print(projects);
         return projects;
       }
-      _controller.add(ProjectStatus.error);
-      return null;
     } catch (error) {
       print(error);
     }
+    _controller.add(ProjectStatus.error);
+    return null;
   }
 
   Future<http.Response> requestGetProject({
@@ -240,23 +240,23 @@ class ProjectRepository {
             )
             .toList()
             .toString(),
-        // 'userstories': project.userstories
-        //     .map(
-        //       (userstory) => jsonEncode(
-        //         userstory.id.toString() == '-1'
-        //             ? <String, String>{
-        //                 'title': userstory.title,
-        //                 'status': userstory.status.id.toString(),
-        //               }
-        //             : <String, String>{
-        //                 'id': userstory.id.toString(),
-        //                 'title': userstory.title,
-        //                 'status': userstory.status.id.toString(),
-        //               },
-        //       ),
-        //     )
-        //     .toList()
-        //     .toString(),
+        'userstories': project.userstories
+            .map(
+              (userstory) => jsonEncode(
+                userstory.id.toString() == '-1'
+                    ? <String, String>{
+                        'title': userstory.title,
+                        'status': userstory.status.id.toString(),
+                      }
+                    : <String, String>{
+                        'id': userstory.id.toString(),
+                        'title': userstory.title,
+                        'status': userstory.status.id.toString(),
+                      },
+              ),
+            )
+            .toList()
+            .toString(),
       },
     );
     print('body');
@@ -274,45 +274,71 @@ class ProjectRepository {
   }
 
   Future<Userstory?> updateUserstory(String token, Userstory userstory) async {
-    print('updateProject');
+    print('updateUserstory');
     try {
       final res =
           await requestUpdateUserstory(token: token, userstory: userstory);
-      // print(res);
       final json = jsonDecode(res.body) as Map<String, dynamic>;
-      // print(json);
+      print(json);
 
       final success = json['success'] as bool;
       if (success) {
         final userstoryJsonObject = json['data'] as Map<String, dynamic>;
-        print('userstoryJsonObject');
-        print(userstoryJsonObject);
+        // print('userstoryJsonObject');
+        // print(userstoryJsonObject);
 
         final statusObj = userstoryJsonObject['status'] as Map<String, dynamic>;
-        print('statusObj');
-        print(statusObj);
+        // print('status');
+        // print(statusObj);
         final status = Status(
           statusObj['id'] as int,
           order: statusObj['order'] as int,
           title: statusObj['title'] as String,
         );
+        // print(status);
+
+        final tasks = <Task>[];
+        final tasksList = userstoryJsonObject['tasks'] as List;
+        if (tasksList.isNotEmpty) {
+          for (final taskJsonString in tasksList) {
+            print('task');
+            final taskJsonObject = taskJsonString as Map<String, dynamic>;
+            // print(taskJsonObject);
+            final task = Task(
+              int.parse(
+                taskJsonObject['id']!.toString(),
+              ),
+              order: int.parse(
+                taskJsonObject['order']!.toString(),
+              ),
+              title: taskJsonObject['title']!.toString(),
+              startDate:
+                  DateTime.parse(taskJsonObject['start_date']!.toString()),
+              endDate: DateTime.parse(taskJsonObject['end_date']!.toString()),
+            );
+            print(task);
+            tasks.add(task);
+          }
+        }
 
         final updatedUserstory = Userstory(
           int.parse(userstoryJsonObject['id']!.toString()),
           title: userstoryJsonObject['title']!.toString(),
           status: status,
+          tasks: tasks,
         );
-        print('updatedUserstory');
-        print(updatedUserstory);
+
+        // print('updatedUserstory');
+        // print(updatedUserstory);
         _controller.add(ProjectStatus.ready);
         return updatedUserstory;
       }
-
-      _controller.add(ProjectStatus.error);
-      return null;
     } catch (e) {
-      print(e.toString());
+      print(e);
     }
+
+    _controller.add(ProjectStatus.error);
+    return null;
   }
 
   Future<http.Response> requestUpdateUserstory({
@@ -325,6 +351,29 @@ class ProjectRepository {
         'mode': 'userstory',
         'title': userstory.title,
         'status': userstory.status.id.toString(),
+        'tasks': userstory.tasks
+            .map(
+              (task) => jsonEncode(
+                task.id.toString() == '-1'
+                    ? <String, String>{
+                        'order': task.order.toString(),
+                        'status': task.status.id.toString(),
+                        'title': task.title,
+                        'startDate': task.startDate!.toIso8601String(),
+                        'endDate': task.endDate!.toIso8601String(),
+                      }
+                    : <String, String>{
+                        'id': task.id.toString(),
+                        'order': task.order.toString(),
+                        'status': task.status.id.toString(),
+                        'title': task.title,
+                        'startDate': task.startDate!.toIso8601String(),
+                        'endDate': task.endDate!.toIso8601String(),
+                      },
+              ),
+            )
+            .toList()
+            .toString(),
       },
     );
     // print('body');
@@ -375,12 +424,11 @@ class ProjectRepository {
         // _controller.add(ProjectStatus.ready);
         return removedUserstory;
       }
-
-      _controller.add(ProjectStatus.error);
-      return null;
     } catch (e) {
-      print(e.toString());
+      print(e);
     }
+    _controller.add(ProjectStatus.error);
+    return null;
   }
 
   Future<http.Response> requestRemoveUserstory({

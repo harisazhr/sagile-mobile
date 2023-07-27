@@ -168,34 +168,9 @@ class _UserstoryModalState extends State<UserstoryModal> {
               onPressed: () {
                 _navigator.pop();
                 showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text(
-                        "Are you sure you want to DELETE this user story?"),
-                    actions: [
-                      ElevatedButton(
-                        style: ButtonStyle(
-                            backgroundColor: MaterialStateColor.resolveWith(
-                                (states) => Colors.red)),
-                        onPressed: () {
-                          _navigator.pop();
-                          context.read<ProjectBloc>()
-                            ..add(ProjectStatusChanged(ProjectStatus.loading))
-                            ..add(ProjectStatusChanged(
-                                ProjectStatus.removingUserstory,
-                                userstory: _userstory));
-                        },
-                        child: Text("Yes"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          _navigator.pop();
-                        },
-                        child: Text("Cancel"),
-                      ),
-                    ],
-                  ),
-                );
+                    context: context,
+                    builder: (context) =>
+                        UserstoryModalDelete(userstoryId: _userstory.id));
               },
               child: Text("Delete"),
             ),
@@ -264,34 +239,49 @@ class _UserstoryModalEditState extends State<UserstoryModalEdit> {
         };
 
         return Scaffold(
-          appBar: AppBar(title: Text('Edit User Story'), actions: [
-            IconButton(
-              onPressed: () {
-                final isValid = _formKey.currentState!.validate();
-                if (isValid) {
-                  final _updatedUserStory = Userstory(
-                    widget.userstoryId,
-                    title: _controller['title']!.text,
-                    status: _statuses.firstWhere(
-                      (status) =>
-                          status.id == int.parse(_controller['status']!.text),
-                    ),
-                    tasks: _userstory.tasks,
-                  );
-
+          appBar: AppBar(
+              title: Text(
+                'Edit User Story',
+              ),
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () {
+                  _navigator.pop();
                   context.read<ProjectBloc>()
                     ..add(ProjectStatusChanged(ProjectStatus.loading))
-                    ..add(ProjectStatusChanged(ProjectStatus.updatingUserstory,
-                        userstory: _updatedUserStory));
-                  _navigator.pop();
-                }
-              },
-              icon: Icon(
-                Icons.save,
-                color: Theme.of(context).colorScheme.onBackground,
+                    ..add(ProjectStatusChanged(ProjectStatus.retrieving));
+                },
               ),
-            )
-          ]),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    final isValid = _formKey.currentState!.validate();
+                    if (isValid) {
+                      final _updatedUserStory = Userstory(
+                        widget.userstoryId,
+                        title: _controller['title']!.text,
+                        status: _statuses.firstWhere(
+                          (status) =>
+                              status.id ==
+                              int.parse(_controller['status']!.text),
+                        ),
+                        tasks: _userstory.tasks,
+                      );
+
+                      context.read<ProjectBloc>()
+                        ..add(ProjectStatusChanged(ProjectStatus.loading))
+                        ..add(ProjectStatusChanged(
+                            ProjectStatus.updatingUserstory,
+                            userstory: _updatedUserStory));
+                      _navigator.pop();
+                    }
+                  },
+                  icon: Icon(
+                    Icons.save,
+                    color: Theme.of(context).colorScheme.onBackground,
+                  ),
+                )
+              ]),
           body: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Form(
@@ -387,41 +377,50 @@ class _UserstoryModalNewState extends State<UserstoryModalNew> {
       builder: (context, state) {
         final _project = state.projects
             .firstWhere((project) => project.id == widget.projectId);
-
         final _statuses = _project.statuses;
+
         final _controller = <String, TextEditingController>{
           'title': TextEditingController(),
-          'status': TextEditingController(),
+          'status': TextEditingController.fromValue(
+              TextEditingValue(text: "${_statuses.first.id}")),
         };
 
         return Scaffold(
-          appBar: AppBar(title: Text('Add User Story'), actions: [
-            IconButton(
-              onPressed: () {
-                final isValid = _formKey.currentState!.validate();
-                if (isValid) {
-                  final _updatedUserStory = Userstory(
-                    -1,
-                    title: _controller['title']!.text,
-                    status: _statuses.firstWhere(
-                      (status) =>
-                          status.id == int.parse(_controller['status']!.text),
-                    ),
-                  );
-
-                  context.read<ProjectBloc>()
-                    ..add(ProjectStatusChanged(ProjectStatus.loading))
-                    ..add(ProjectStatusChanged(ProjectStatus.updatingUserstory,
-                        userstory: _updatedUserStory));
-                  _navigator.pop();
-                }
-              },
-              icon: Icon(
-                Icons.save,
-                color: Theme.of(context).colorScheme.onBackground,
+          appBar: AppBar(
+              title: Text(
+                'Add User Story',
               ),
-            )
-          ]),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    final isValid = _formKey.currentState!.validate();
+                    if (isValid) {
+                      final _updatedUserStory = Userstory(
+                        -1,
+                        title: _controller['title']!.text,
+                        status: _statuses.firstWhere(
+                          (status) =>
+                              status.id ==
+                              int.parse(_controller['status']!.text),
+                        ),
+                      );
+
+                      _project.userstories.add(_updatedUserStory);
+
+                      context.read<ProjectBloc>()
+                        ..add(ProjectStatusChanged(ProjectStatus.loading))
+                        ..add(ProjectStatusChanged(
+                            ProjectStatus.updatingProject,
+                            project: _project));
+                      _navigator.pop();
+                    }
+                  },
+                  icon: Icon(
+                    Icons.save,
+                    color: Theme.of(context).colorScheme.onBackground,
+                  ),
+                )
+              ]),
           body: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Form(
@@ -473,22 +472,69 @@ class _UserstoryModalNewState extends State<UserstoryModalNew> {
                       ],
                     ),
                   ),
-                  // ElevatedButton(
-                  //   onPressed: () {
-                  //     _navigator.push(
-                  //       MaterialPageRoute(
-                  //         builder: (context) => UserstoryModalTask(
-                  //           userstoryId: widget.userstoryId,
-                  //         ),
-                  //       ),
-                  //     );
-                  //   },
-                  //   child: Text("Manage Tasks"),
-                  // ),
                 ],
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+class UserstoryModalDelete extends StatefulWidget {
+  const UserstoryModalDelete({
+    super.key,
+    required this.userstoryId,
+  });
+
+  final int userstoryId;
+
+  @override
+  State<UserstoryModalDelete> createState() => _UserstoryModalDeleteState();
+}
+
+class _UserstoryModalDeleteState extends State<UserstoryModalDelete> {
+  @override
+  Widget build(BuildContext context) {
+    final _navigator = Navigator.of(context);
+    return BlocBuilder<ProjectBloc, ProjectState>(
+      builder: (context, state) {
+        final _project = state.projects.firstWhere(
+            (project) =>
+                project.userstories.firstWhere(
+                    (userstory) => userstory.id == widget.userstoryId,
+                    orElse: () => Userstory.empty) !=
+                Userstory.empty,
+            orElse: () => Project.empty);
+        final _userstory = _project.userstories.firstWhere(
+            (userstory) => userstory.id == widget.userstoryId,
+            orElse: () => Userstory.empty);
+
+        return AlertDialog(
+          title: Text('${_userstory.title}'),
+          content: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Text('Are you sure you want to delete this userstory?')),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                _project.userstories.remove(_userstory);
+                context.read<ProjectBloc>()
+                  ..add(ProjectStatusChanged(ProjectStatus.loading))
+                  ..add(ProjectStatusChanged(ProjectStatus.updatingProject,
+                      project: _project));
+                _navigator.pop();
+              },
+              child: Text("Delete"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _navigator.pop();
+              },
+              child: Text("Cancel"),
+            ),
+          ],
         );
       },
     );
@@ -507,11 +553,11 @@ class UserstoryModalTask extends StatefulWidget {
 }
 
 class _UserstoryModalTaskState extends State<UserstoryModalTask> {
-  final _formKey = GlobalKey<FormState>();
+  // final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
-    final _navigator = Navigator.of(context);
+    // final _navigator = Navigator.of(context);
     return BlocBuilder<ProjectBloc, ProjectState>(
       builder: (context, state) {
         final _project = state.projects.firstWhere(
@@ -528,6 +574,15 @@ class _UserstoryModalTaskState extends State<UserstoryModalTask> {
         return Scaffold(
           appBar: AppBar(
             title: Text('Manage Tasks'),
+            // actions: [
+            //   IconButton(
+            //     onPressed: () {},
+            //     icon: Icon(
+            //       Icons.save,
+            //       color: Theme.of(context).colorScheme.onBackground,
+            //     ),
+            //   )
+            // ],
           ),
           body: SafeArea(
             child: Padding(
@@ -535,16 +590,16 @@ class _UserstoryModalTaskState extends State<UserstoryModalTask> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // ElevatedButton(
-                  //     onPressed: () {
-                  //       // showDialog(
-                  //       //   context: context,
-                  //       //   builder: (context) => UserstoryModalStatusNew(
-                  //       //     projectId: _project.id,
-                  //       //   ),
-                  //       // );
-                  //     },
-                  //     child: Text('Add New Task')),
+                  ElevatedButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => UserstoryModalTaskNew(
+                            userstoryId: _userstory.id,
+                          ),
+                        );
+                      },
+                      child: Text('Add New Task')),
                   Expanded(
                     child: ReorderableListView(
                       // shrinkWrap: true,
@@ -576,60 +631,43 @@ class _UserstoryModalTaskState extends State<UserstoryModalTask> {
                                   Text('${task.title}'),
                                 ],
                               ),
-                              // subtitle: Card(
-                              //   margin: EdgeInsets.zero,
-                              //   color: Colors.blue,
-                              //   child: Padding(
-                              //     padding: const EdgeInsets.symmetric(
-                              //         horizontal: 4.0),
-                              //     child: Text(
-                              //       '${task.status.title}',
-                              //       style: TextStyle(
-                              //         color: Theme.of(context)
-                              //             .colorScheme
-                              //             .onPrimary,
-                              //         fontSize: 12,
-                              //       ),
-                              //     ),
-                              //   ),
-                              // ),
-                              // trailing: Row(
-                              //   mainAxisSize: MainAxisSize.min,
-                              //   children: [
-                              //     IconButton(
-                              //       onPressed: () {
-                              //         // showDialog(
-                              //         //   context: context,
-                              //         //   builder: (context) =>
-                              //         //       UserstoryModalStatusEdit(
-                              //         //     projectId: _project.id,
-                              //         //     statusId: status.id,
-                              //         //   ),
-                              //         // );
-                              //       },
-                              //       icon: Icon(
-                              //         Icons.edit,
-                              //         color: Colors.blueGrey,
-                              //       ),
-                              //     ),
-                              //     IconButton(
-                              //       onPressed: () {
-                              //         // showDialog(
-                              //         //   context: context,
-                              //         //   builder: (context) =>
-                              //         //       UserstoryModalStatusDelete(
-                              //         //     projectId: _project.id,
-                              //         //     statusId: status.id,
-                              //         //   ),
-                              //         // );
-                              //       },
-                              //       icon: Icon(
-                              //         Icons.delete,
-                              //         color: Colors.red,
-                              //       ),
-                              //     ),
-                              //   ],
-                              // ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) =>
+                                            UserstoryModalTaskEdit(
+                                          userstoryId: _userstory.id,
+                                          taskId: task.id,
+                                        ),
+                                      );
+                                    },
+                                    icon: Icon(
+                                      Icons.edit,
+                                      color: Colors.blueGrey,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) =>
+                                            UserstoryModalTaskDelete(
+                                          userstoryId: _userstory.id,
+                                          taskId: task.id,
+                                        ),
+                                      );
+                                    },
+                                    icon: Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         )
@@ -639,8 +677,9 @@ class _UserstoryModalTaskState extends State<UserstoryModalTask> {
                           if (oldIndex < newIndex) {
                             newIndex -= 1;
                           }
-                          // _project.statuses.insert(
-                          //     newIndex, _project.statuses.removeAt(oldIndex));
+                          _userstory.tasks.insert(
+                              newIndex, _userstory.tasks.removeAt(oldIndex));
+                          _userstory.reorderTasks();
                         });
                       },
                     ),
@@ -655,225 +694,499 @@ class _UserstoryModalTaskState extends State<UserstoryModalTask> {
   }
 }
 
-// class UserstoryModalStatusNew extends StatefulWidget {
-//   const UserstoryModalStatusNew({
-//     super.key,
-//     required this.projectId,
-//   });
+class UserstoryModalTaskNew extends StatefulWidget {
+  const UserstoryModalTaskNew({
+    super.key,
+    required this.userstoryId,
+  });
 
-//   final int projectId;
+  final int userstoryId;
 
-//   @override
-//   State<UserstoryModalStatusNew> createState() =>
-//       _UserstoryModalStatusNewState();
-// }
+  @override
+  State<UserstoryModalTaskNew> createState() => _UserstoryModalTaskNewState();
+}
 
-// class _UserstoryModalStatusNewState extends State<UserstoryModalStatusNew> {
-//   final _formKey = GlobalKey<FormState>();
+class _UserstoryModalTaskNewState extends State<UserstoryModalTaskNew> {
+  final _formKey = GlobalKey<FormState>();
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final _navigator = Navigator.of(context);
-//     return BlocBuilder<ProjectBloc, ProjectState>(
-//       builder: (context, state) {
-//         final _project = state.projects
-//             .firstWhere((project) => project.id == widget.projectId);
-//         final _controller = <String, TextEditingController>{
-//           'title': TextEditingController(),
-//         };
+  @override
+  Widget build(BuildContext context) {
+    final _navigator = Navigator.of(context);
+    return BlocBuilder<ProjectBloc, ProjectState>(
+      builder: (context, state) {
+        final _project = state.projects.firstWhere(
+            (project) =>
+                project.userstories.firstWhere(
+                    (userstory) => userstory.id == widget.userstoryId,
+                    orElse: () => Userstory.empty) !=
+                Userstory.empty,
+            orElse: () => Project.empty);
+        final _statuses = _project.statuses;
+        final _userstory = _project.userstories.firstWhere(
+            (userstory) => userstory.id == widget.userstoryId,
+            orElse: () => Userstory.empty);
 
-//         return AlertDialog(
-//           title: Text('New Status'),
-//           content: Padding(
-//             padding: const EdgeInsets.symmetric(horizontal: 4.0),
-//             child: Form(
-//               key: _formKey,
-//               child: Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   TextFormField(
-//                     controller: _controller['title'],
-//                     decoration: InputDecoration(
-//                       labelText: "Title",
-//                       isDense: true,
-//                       border: OutlineInputBorder(),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//           actions: [
-//             ElevatedButton(
-//               onPressed: () {
-//                 final isValid = _formKey.currentState!.validate();
-//                 if (isValid) {
-//                   final updatedStatus =
-//                       Status(-1, title: _controller['title']!.text);
-//                   _project.updateStatus(updatedStatus);
-//                   _project.reorderStatuses();
-//                   context.read<ProjectBloc>()
-//                     ..add(ProjectStatusChanged(ProjectStatus.loading))
-//                     ..add(ProjectStatusChanged(ProjectStatus.ready));
+        final _controller = <String, TextEditingController>{
+          'title': TextEditingController(),
+          'status': TextEditingController.fromValue(
+              TextEditingValue(text: "${_statuses.first.id}")),
+          'startDate': TextEditingController.fromValue(TextEditingValue(
+              text: DateFormat('dd/MM/yyyy').format(_project.startDate!))),
+          'endDate': TextEditingController.fromValue(TextEditingValue(
+              text: DateFormat('dd/MM/yyyy').format(_project.endDate!))),
+        };
 
-//                   _navigator.pop();
-//                 }
-//               },
-//               child: Text("Save"),
-//             ),
-//             ElevatedButton(
-//               onPressed: () {
-//                 _navigator.pop();
-//               },
-//               child: Text("Close"),
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-// }
+        return AlertDialog(
+          title: Text('New Task'),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: TextFormField(
+                    controller: _controller['title'],
+                    decoration: InputDecoration(
+                      labelText: "Title",
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Please enter the task's title";
+                      }
+                      return null;
+                    },
+                    // maxLines: 3,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField(
+                        decoration: InputDecoration(
+                          labelText: "Status",
+                          isDense: true,
+                          border: OutlineInputBorder(),
+                        ),
+                        items: _statuses
+                            .map((status) => DropdownMenuItem(
+                                  child: Text(status.title),
+                                  value: status.id,
+                                ))
+                            .toList(),
+                        value: int.parse(_controller['status']!.text),
+                        onChanged: (newValue) {
+                          _controller['status'] =
+                              TextEditingController(text: newValue.toString());
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _controller['startDate'],
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: "Start Date",
+                            isDense: true,
+                            border: OutlineInputBorder(),
+                            enabled: false,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                          onPressed: () async {
+                            DateTime? newDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateFormat('dd/MM/yyyy')
+                                  .parse(_controller['startDate']!.text),
+                              firstDate: _project.startDate!,
+                              lastDate: _project.endDate!,
+                            );
 
-// class UserstoryModalStatusEdit extends StatefulWidget {
-//   const UserstoryModalStatusEdit({
-//     super.key,
-//     required this.projectId,
-//     required this.statusId,
-//   });
+                            if (newDate != null) {
+                              _controller['startDate']!.text =
+                                  DateFormat('dd/MM/yyyy').format(newDate);
+                              if (newDate.compareTo(DateFormat('dd/MM/yyyy')
+                                      .parse(_controller['endDate']!.text)) >
+                                  0) {
+                                _controller['endDate']!.text =
+                                    DateFormat('dd/MM/yyyy').format(newDate);
+                              }
+                            }
+                          },
+                          icon: Icon(Icons.calendar_month))
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _controller['endDate'],
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: "End Date",
+                            isDense: true,
+                            border: OutlineInputBorder(),
+                            enabled: false,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                          onPressed: () async {
+                            DateTime? newDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateFormat('dd/MM/yyyy')
+                                  .parse(_controller['endDate']!.text),
+                              firstDate: DateFormat('dd/MM/yyyy')
+                                  .parse(_controller['startDate']!.text),
+                              lastDate: _project.endDate!,
+                            );
+                            if (newDate != null) {
+                              _controller['endDate']!.text =
+                                  DateFormat('dd/MM/yyyy').format(newDate);
+                            }
+                          },
+                          icon: Icon(Icons.calendar_month))
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                final isValid = _formKey.currentState!.validate();
+                if (isValid) {
+                  final newTask = Task(
+                    -1,
+                    title: _controller['title']!.text,
+                    status: _statuses.firstWhere(
+                        (s) => s.id == int.parse(_controller['status']!.text)),
+                    startDate: DateFormat('dd/MM/yyyy')
+                        .parse(_controller['startDate']!.text),
+                    endDate: DateFormat('dd/MM/yyyy')
+                        .parse(_controller['endDate']!.text),
+                  );
+                  _userstory.tasks.add(newTask);
+                  _userstory.reorderTasks();
+                  context.read<ProjectBloc>()
+                    ..add(ProjectStatusChanged(ProjectStatus.loading))
+                    ..add(ProjectStatusChanged(ProjectStatus.ready));
 
-//   final int projectId;
-//   final int statusId;
+                  _navigator.pop();
+                }
+              },
+              child: Text("Save"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _navigator.pop();
+              },
+              child: Text("Close"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
 
-//   @override
-//   State<UserstoryModalStatusEdit> createState() =>
-//       _UserstoryModalStatusEditState();
-// }
+class UserstoryModalTaskEdit extends StatefulWidget {
+  const UserstoryModalTaskEdit({
+    super.key,
+    required this.userstoryId,
+    required this.taskId,
+  });
 
-// class _UserstoryModalStatusEditState extends State<UserstoryModalStatusEdit> {
-//   final _formKey = GlobalKey<FormState>();
+  final int userstoryId;
+  final int taskId;
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final _navigator = Navigator.of(context);
-//     return BlocBuilder<ProjectBloc, ProjectState>(
-//       builder: (context, state) {
-//         final _project = state.projects
-//             .firstWhere((project) => project.id == widget.projectId);
-//         final _status = _project.statuses
-//             .firstWhere((status) => status.id == widget.statusId);
-//         final _controller = <String, TextEditingController>{
-//           'title': TextEditingController.fromValue(
-//               TextEditingValue(text: _status.title)),
-//         };
+  @override
+  State<UserstoryModalTaskEdit> createState() => _UserstoryModalTaskEditState();
+}
 
-//         return AlertDialog(
-//           title: Text('Edit Status'),
-//           content: Padding(
-//             padding: const EdgeInsets.symmetric(horizontal: 4.0),
-//             child: Form(
-//               key: _formKey,
-//               child: Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   TextFormField(
-//                     controller: _controller['title'],
-//                     decoration: InputDecoration(
-//                       labelText: "Title",
-//                       isDense: true,
-//                       border: OutlineInputBorder(),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//           actions: [
-//             ElevatedButton(
-//               onPressed: () {
-//                 final isValid = _formKey.currentState!.validate();
-//                 if (isValid) {
-//                   final updatedStatus = Status(widget.statusId,
-//                       title: _controller['title']!.text);
-//                   _project.updateStatus(updatedStatus);
-//                   _project.reorderStatuses();
-//                   context.read<ProjectBloc>()
-//                     ..add(ProjectStatusChanged(ProjectStatus.loading))
-//                     ..add(ProjectStatusChanged(ProjectStatus.ready));
+class _UserstoryModalTaskEditState extends State<UserstoryModalTaskEdit> {
+  final _formKey = GlobalKey<FormState>();
 
-//                   _navigator.pop();
-//                 }
-//               },
-//               child: Text("Save"),
-//             ),
-//             ElevatedButton(
-//               onPressed: () {
-//                 _navigator.pop();
-//               },
-//               child: Text("Close"),
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    final _navigator = Navigator.of(context);
+    return BlocBuilder<ProjectBloc, ProjectState>(
+      builder: (context, state) {
+        final _project = state.projects.firstWhere(
+            (project) =>
+                project.userstories.firstWhere(
+                    (userstory) => userstory.id == widget.userstoryId,
+                    orElse: () => Userstory.empty) !=
+                Userstory.empty,
+            orElse: () => Project.empty);
+        final _statuses = _project.statuses;
+        final _userstory = _project.userstories.firstWhere(
+            (userstory) => userstory.id == widget.userstoryId,
+            orElse: () => Userstory.empty);
+        final _task = _userstory.tasks.firstWhere(
+            (task) => task.id == widget.taskId,
+            orElse: () => Task.empty);
 
-// class UserstoryModalStatusDelete extends StatefulWidget {
-//   const UserstoryModalStatusDelete({
-//     super.key,
-//     required this.projectId,
-//     required this.statusId,
-//   });
+        final _controller = <String, TextEditingController>{
+          'title': TextEditingController.fromValue(
+              TextEditingValue(text: "${_task.title}")),
+          'status': TextEditingController.fromValue(
+              TextEditingValue(text: "${_task.status.id}")),
+          'startDate': TextEditingController.fromValue(TextEditingValue(
+              text: DateFormat('dd/MM/yyyy').format(_task.startDate!))),
+          'endDate': TextEditingController.fromValue(TextEditingValue(
+              text: DateFormat('dd/MM/yyyy').format(_task.endDate!))),
+        };
 
-//   final int projectId;
-//   final int statusId;
+        return AlertDialog(
+          title: Text('New Task'),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: TextFormField(
+                    controller: _controller['title'],
+                    decoration: InputDecoration(
+                      labelText: "Title",
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Please enter the task's title";
+                      }
+                      return null;
+                    },
+                    // maxLines: 3,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField(
+                        decoration: InputDecoration(
+                          labelText: "Status",
+                          isDense: true,
+                          border: OutlineInputBorder(),
+                        ),
+                        items: _statuses
+                            .map((status) => DropdownMenuItem(
+                                  child: Text(status.title),
+                                  value: status.id,
+                                ))
+                            .toList(),
+                        value: int.parse(_controller['status']!.text),
+                        onChanged: (newValue) {
+                          _controller['status'] =
+                              TextEditingController(text: newValue.toString());
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _controller['startDate'],
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: "Start Date",
+                            isDense: true,
+                            border: OutlineInputBorder(),
+                            enabled: false,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                          onPressed: () async {
+                            DateTime? newDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateFormat('dd/MM/yyyy')
+                                  .parse(_controller['startDate']!.text),
+                              firstDate: _project.startDate!,
+                              lastDate: _project.endDate!,
+                            );
 
-//   @override
-//   State<UserstoryModalStatusDelete> createState() =>
-//       _UserstoryModalStatusDeleteState();
-// }
+                            if (newDate != null) {
+                              _controller['startDate']!.text =
+                                  DateFormat('dd/MM/yyyy').format(newDate);
+                              if (newDate.compareTo(DateFormat('dd/MM/yyyy')
+                                      .parse(_controller['endDate']!.text)) >
+                                  0) {
+                                _controller['endDate']!.text =
+                                    DateFormat('dd/MM/yyyy').format(newDate);
+                              }
+                            }
+                          },
+                          icon: Icon(Icons.calendar_month))
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _controller['endDate'],
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: "End Date",
+                            isDense: true,
+                            border: OutlineInputBorder(),
+                            enabled: false,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                          onPressed: () async {
+                            DateTime? newDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateFormat('dd/MM/yyyy')
+                                  .parse(_controller['endDate']!.text),
+                              firstDate: DateFormat('dd/MM/yyyy')
+                                  .parse(_controller['startDate']!.text),
+                              lastDate: _project.endDate!,
+                            );
+                            if (newDate != null) {
+                              _controller['endDate']!.text =
+                                  DateFormat('dd/MM/yyyy').format(newDate);
+                            }
+                          },
+                          icon: Icon(Icons.calendar_month))
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                final isValid = _formKey.currentState!.validate();
+                if (isValid) {
+                  final newTask = _task.copyWith(
+                    title: _controller['title']!.text,
+                    status: _statuses.firstWhere(
+                        (s) => s.id == int.parse(_controller['status']!.text)),
+                    startDate: DateFormat('dd/MM/yyyy')
+                        .parse(_controller['startDate']!.text),
+                    endDate: DateFormat('dd/MM/yyyy')
+                        .parse(_controller['endDate']!.text),
+                  );
+                  _userstory.tasks
+                      .insert(_userstory.tasks.indexOf(_task), newTask);
+                  _userstory.tasks.remove(_task);
+                  _userstory.reorderTasks();
+                  context.read<ProjectBloc>()
+                    ..add(ProjectStatusChanged(ProjectStatus.loading))
+                    ..add(ProjectStatusChanged(ProjectStatus.ready));
 
-// class _UserstoryModalStatusDeleteState
-//     extends State<UserstoryModalStatusDelete> {
-//   @override
-//   Widget build(BuildContext context) {
-//     final _navigator = Navigator.of(context);
-//     return BlocBuilder<ProjectBloc, ProjectState>(
-//       builder: (context, state) {
-//         final _project = state.projects.firstWhere(
-//             (project) => project.id == widget.projectId,
-//             orElse: () => Project.empty);
-//         final _status = _project.statuses.firstWhere(
-//             (status) => status.id == widget.statusId,
-//             orElse: () => Status.empty);
-//         return AlertDialog(
-//           title: Text('${_status.title}'),
-//           content: Padding(
-//               padding: const EdgeInsets.symmetric(horizontal: 4.0),
-//               child: Text('Are you sure you want to delete this status?')),
-//           actions: [
-//             ElevatedButton(
-//               onPressed: () {
-//                 _navigator.pop();
-//                 _project.removeStatus(_status.id);
-//                 _project.reorderStatuses();
-//                 context.read<ProjectBloc>()
-//                   ..add(ProjectStatusChanged(ProjectStatus.loading))
-//                   ..add(ProjectStatusChanged(ProjectStatus.ready));
-//               },
-//               child: Text("Delete"),
-//             ),
-//             ElevatedButton(
-//               onPressed: () {
-//                 _navigator.pop();
-//               },
-//               child: Text("Cancel"),
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-// }
+                  _navigator.pop();
+                }
+              },
+              child: Text("Save"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _navigator.pop();
+              },
+              child: Text("Close"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class UserstoryModalTaskDelete extends StatefulWidget {
+  const UserstoryModalTaskDelete({
+    super.key,
+    required this.userstoryId,
+    required this.taskId,
+  });
+
+  final int userstoryId;
+  final int taskId;
+
+  @override
+  State<UserstoryModalTaskDelete> createState() =>
+      _UserstoryModalTaskDeleteState();
+}
+
+class _UserstoryModalTaskDeleteState extends State<UserstoryModalTaskDelete> {
+  @override
+  Widget build(BuildContext context) {
+    final _navigator = Navigator.of(context);
+    return BlocBuilder<ProjectBloc, ProjectState>(
+      builder: (context, state) {
+        final _project = state.projects.firstWhere(
+            (project) =>
+                project.userstories.firstWhere(
+                    (userstory) => userstory.id == widget.userstoryId,
+                    orElse: () => Userstory.empty) !=
+                Userstory.empty,
+            orElse: () => Project.empty);
+        final _userstory = _project.userstories.firstWhere(
+            (userstory) => userstory.id == widget.userstoryId,
+            orElse: () => Userstory.empty);
+
+        final _task = _userstory.tasks.firstWhere(
+            (task) => task.id == widget.taskId,
+            orElse: () => Task.empty);
+
+        return AlertDialog(
+          title: Text('${_task.title}'),
+          content: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Text('Are you sure you want to delete this status?')),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                _userstory.tasks.remove(_task);
+                _userstory.reorderTasks();
+                context.read<ProjectBloc>()
+                  ..add(ProjectStatusChanged(ProjectStatus.loading))
+                  ..add(ProjectStatusChanged(ProjectStatus.ready));
+                _navigator.pop();
+              },
+              child: Text("Delete"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _navigator.pop();
+              },
+              child: Text("Cancel"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

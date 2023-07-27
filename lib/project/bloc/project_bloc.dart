@@ -141,7 +141,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
   Future<Userstory?> _tryUpdateUserstory(
       String token, Userstory userstory) async {
     try {
-      print('_tryUpdateProject');
+      print('_tryUpdateUserstory');
       final updatedUserstory =
           await _projectRepository.updateUserstory(token, userstory);
       return Userstory(

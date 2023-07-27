@@ -6,7 +6,8 @@ class NetworkRepository {
   const NetworkRepository();
 
   /// the main url
-  static const mainURL = 'https://241e-161-139-222-49.ngrok-free.app';
+  static const mainURL =
+      'https://0d46-2001-e68-5454-778d-9c88-7163-64d8-4870.ngrok-free.app';
 
   /// the api url
   static const apiURL = '$mainURL/api';

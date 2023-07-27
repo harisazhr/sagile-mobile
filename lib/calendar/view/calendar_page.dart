@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:project_repository/project_repository.dart';
-import 'package:sagile_mobile/home/view/custom_widgets.dart';
 import 'package:sagile_mobile/project/bloc/project_bloc.dart';
 import 'package:table_calendar/table_calendar.dart';
 
