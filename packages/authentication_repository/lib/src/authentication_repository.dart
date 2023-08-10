@@ -20,7 +20,6 @@ class AuthenticationRepository {
     required String username,
     required String password,
   }) async {
-    // _controller.add(AuthenticationStatus.authenticated); // DEVENV
     final res = await requestAuth(password: password, username: username);
     final json = jsonDecode(res.body) as Map<String, dynamic>;
 
@@ -28,12 +27,8 @@ class AuthenticationRepository {
 
     if (success == true) {
       final data = json['data'] as Map<String, dynamic>;
-      // print(data);
-
       final token = data['token'] as String;
       this.token = token;
-      // print(token);
-
       _controller.add(AuthenticationStatus.authenticated);
     } else {
       _controller.add(AuthenticationStatus.unauthenticated);

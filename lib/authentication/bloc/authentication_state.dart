@@ -1,5 +1,7 @@
 part of 'authentication_bloc.dart';
 
+// Determines status of auth when state of auth changes
+// Each status corresponds to different events
 class AuthenticationState extends Equatable {
   const AuthenticationState._({
     this.status = AuthenticationStatus.unknown,

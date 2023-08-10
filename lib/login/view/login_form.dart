@@ -99,7 +99,6 @@ class LoginForm extends StatelessWidget {
         }
       },
       child: Theme(
-        // data: currentUser.settings.isDark ? ThemeData.dark() : ThemeData.light(),
         data: ThemeData.light(),
         child: Scaffold(
           body: Center(
@@ -146,12 +145,6 @@ class _Logo extends StatelessWidget {
           child: Text(
             "SAGILE Mobile",
             textAlign: TextAlign.center,
-            // style: isSmallScreen
-            //     ? Theme.of(context).textTheme.headline5
-            //     : Theme.of(context)
-            //         .textTheme
-            //         .headline4
-            //         ?.copyWith(color: Colors.black),
           ),
         )
       ],
@@ -167,16 +160,7 @@ class _FormContent extends StatefulWidget {
 }
 
 class __FormContentState extends State<_FormContent> {
-  // bool _isPasswordVisible = false;
-  // bool _rememberMe = false;
-
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  // Map<String, TextEditingController> textController = {
-  //   "username": TextEditingController(),
-  //   "email": TextEditingController(),
-  //   "password": TextEditingController(),
-  // };
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -190,20 +174,6 @@ class __FormContentState extends State<_FormContent> {
             _UsernameInput(),
             _gap(),
             _PasswordInput(),
-            _gap(),
-            // CheckboxListTile(
-            //   value: _rememberMe,
-            //   onChanged: (value) {
-            //     if (value == null) return;
-            //     setState(() {
-            //       _rememberMe = value;
-            //     });
-            //   },
-            //   title: const Text('Remember me'),
-            //   controlAffinity: ListTileControlAffinity.leading,
-            //   dense: true,
-            //   contentPadding: const EdgeInsets.all(0),
-            // ),
             _gap(),
             _LoginButton(),
           ],

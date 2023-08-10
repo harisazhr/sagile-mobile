@@ -34,6 +34,7 @@ class AuthenticationBloc
     return super.close();
   }
 
+// Checks for auth status changes due to state change
   Future<void> _onAuthenticationStatusChanged(
     _AuthenticationStatusChanged event,
     Emitter<AuthenticationState> emit,
@@ -43,7 +44,6 @@ class AuthenticationBloc
         return emit(const AuthenticationState.unauthenticated());
       case AuthenticationStatus.authenticated:
         final user = await _tryGetUser(_authenticationRepository.token);
-        // print('user $user');
         return emit(
           user != null
               ? AuthenticationState.authenticated(user)

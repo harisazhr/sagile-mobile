@@ -574,15 +574,6 @@ class _UserstoryModalTaskState extends State<UserstoryModalTask> {
         return Scaffold(
           appBar: AppBar(
             title: Text('Manage Tasks'),
-            // actions: [
-            //   IconButton(
-            //     onPressed: () {},
-            //     icon: Icon(
-            //       Icons.save,
-            //       color: Theme.of(context).colorScheme.onBackground,
-            //     ),
-            //   )
-            // ],
           ),
           body: SafeArea(
             child: Padding(

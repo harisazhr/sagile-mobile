@@ -9,8 +9,6 @@ class UserRepository {
   User? _user = User.empty;
 
   Future<User?> getUser(String token) async {
-    // print('token $token');
-    // print('_user $_user');
     if (_user == User.empty) {
       final res = await requestUser(token: token);
       final json = jsonDecode(res.body) as Map<String, dynamic>;
@@ -25,10 +23,6 @@ class UserRepository {
       _user = User(id, name: name, username: username, email: email);
     }
     return _user;
-    // return Future.delayed(
-    //   const Duration(milliseconds: 300),
-    //   () => _user = User(const Uuid().v4()),
-    // );
   }
 
   Future<http.Response> requestUser({
