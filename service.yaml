@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flutter-app-service
+spec:
+  selector:
+    app: sagile-mobile
+  ports:
+    - protocol: TCP
+      port: 2376
+      targetPort: 2376
+  type: LoadBalancer
